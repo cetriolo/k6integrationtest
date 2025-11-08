@@ -102,7 +102,7 @@ jobs:
     name: Load Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'load' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
+    if: github.event.inputs.test_type == 'load' || github.event.inputs.test_type == 'all'
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
@@ -137,7 +137,7 @@ jobs:
     name: Stress Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'stress' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
+    if: github.event.inputs.test_type == 'stress' || github.event.inputs.test_type == 'all'
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
@@ -172,7 +172,7 @@ jobs:
     name: Performance Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'performance' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
+    if: github.event.inputs.test_type == 'performance' || github.event.inputs.test_type == 'all'
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
