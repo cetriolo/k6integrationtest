@@ -1,0 +1,9 @@
+{
+  "name": "Test Data",
+  "description": "Sample JSON file for testing file uploads",
+  "data": [1, 2, 3, 4, 5],
+  "nested": {
+    "key": "value",
+    "array": ["a", "b", "c"]
+  }
+}

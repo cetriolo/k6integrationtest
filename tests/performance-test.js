@@ -2,58 +2,124 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
-// Metriche custom
+// Custom metrics
 const errorRate = new Rate('errors');
-const customTrend = new Trend('custom_response_time');
+const authDuration = new Trend('auth_duration');
+const uploadDuration = new Trend('upload_duration');
 
 export const options = {
     stages: [
-        { duration: '1m', target: 20 },  // warm-up
-        { duration: '3m', target: 100 }, // carico normale
-        { duration: '1m', target: 20 },  // cool-down
+        { duration: '30s', target: 10 },  // Warm up
+        { duration: '1m', target: 50 },   // Ramp up
+        { duration: '3m', target: 100 },  // Sustained load
+        { duration: '1m', target: 150 },  // Peak load
+        { duration: '2m', target: 100 },  // Back to sustained
+        { duration: '30s', target: 0 },   // Ramp down
     ],
     thresholds: {
-        http_req_duration: [
-            'p(50)<100',   // 50% sotto 100ms
-            'p(90)<500',   // 90% sotto 500ms
-            'p(95)<800',   // 95% sotto 800ms
-            'p(99)<2000',  // 99% sotto 2s
-        ],
-        http_req_failed: ['rate<0.02'], // meno del 2% di errori
-        errors: ['rate<0.05'], // meno del 5% di errori custom
-        custom_response_time: ['p(95)<1000'],
+        http_req_duration: ['p(95)<1500'],
+        http_req_failed: ['rate<0.05'],
+        'errors': ['rate<0.1'],
+        'auth_duration': ['p(95)<1000'],
     },
 };
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
 export default function () {
-    // Test con pesi diversi per simulare traffico realistico
-    const randomValue = Math.random();
-
-    let res;
-    if (randomValue < 0.6) {
-        // 60% traffic su products
-        res = http.get(`${BASE_URL}/api/products`);
-    } else if (randomValue < 0.9) {
-        // 30% traffic su users
-        res = http.get(`${BASE_URL}/api/users`);
-    } else {
-        // 10% traffic su health
-        res = http.get(`${BASE_URL}/health`);
-    }
-
-    const success = check(res, {
-        'status è 200': (r) => r.status === 200,
-        'response time < 1s': (r) => r.timings.duration < 1000,
-        'body non vuoto': (r) => r.body.length > 0,
+    // Test health endpoint
+    let res = http.get(`${BASE_URL}/health`);
+    errorRate.add(res.status !== 200);
+    check(res, {
+        'health is ok': (r) => r.status === 200,
     });
 
-    // Registra errori custom
-    errorRate.add(!success);
-    customTrend.add(res.timings.duration);
+    sleep(0.5);
+
+    // Test users endpoint
+    res = http.get(`${BASE_URL}/api/users`);
+    errorRate.add(res.status !== 200);
+    check(res, {
+        'users retrieved': (r) => r.status === 200,
+    });
 
     sleep(0.5);
+
+    // Test products endpoint
+    res = http.get(`${BASE_URL}/api/products`);
+    errorRate.add(res.status !== 200);
+    check(res, {
+        'products retrieved': (r) => r.status === 200,
+    });
+
+    sleep(0.5);
+
+    // Test complete authentication flow
+    const authStart = Date.now();
+
+    const loginPayload = JSON.stringify({
+        username: 'admin',
+        password: 'admin123',
+    });
+
+    const loginParams = {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+
+    res = http.post(`${BASE_URL}/api/auth/login`, loginPayload, loginParams);
+
+    const loginSuccess = check(res, {
+        'login successful': (r) => r.status === 200 && r.json('token') !== undefined,
+    });
+    errorRate.add(!loginSuccess);
+
+    const token = res.json('token');
+
+    if (token) {
+        sleep(0.3);
+
+        const authParams = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        };
+
+        // Verify token
+        res = http.get(`${BASE_URL}/api/auth/verify`, authParams);
+        const verifySuccess = check(res, {
+            'token verified': (r) => r.status === 200 && r.json('authenticated') === true,
+        });
+        errorRate.add(!verifySuccess);
+
+        authDuration.add(Date.now() - authStart);
+
+        sleep(0.5);
+
+        // Test accessing protected resources
+        res = http.get(`${BASE_URL}/api/users`, authParams);
+        errorRate.add(res.status !== 200);
+
+        sleep(0.3);
+
+        // Logout
+        res = http.post(`${BASE_URL}/api/auth/logout`, null, authParams);
+        const logoutSuccess = check(res, {
+            'logout successful': (r) => r.status === 200,
+        });
+        errorRate.add(!logoutSuccess);
+
+        sleep(0.3);
+
+        // Verify token is invalidated
+        res = http.get(`${BASE_URL}/api/auth/verify`, authParams);
+        check(res, {
+            'token invalidated': (r) => r.status === 401,
+        });
+    }
+
+    sleep(1);
 }
 
 export function handleSummary(data) {

@@ -1,0 +1,310 @@
+name: Vegeta Performance Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of test to run'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - load
+          - stress
+          - performance
+          - auth-flow
+          - file-operations
+          - all
+
+env:
+  GO_VERSION: '1.23'
+  VEGETA_VERSION: 'v12.11.1'
+
+jobs:
+  build:
+    name: Build and Test Go Application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build application
+        run: go build -o api-server main.go
+
+      - name: Start server in background
+        run: |
+          ./api-server &
+          echo $! > server.pid
+          sleep 3
+
+      - name: Test server connectivity
+        run: curl http://localhost:8080/health
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-server
+          path: api-server
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi
+
+  smoke-test:
+    name: Vegeta Smoke Test
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'smoke' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-server
+
+      - name: Make server executable
+        run: chmod +x api-server
+
+      - name: Start server
+        run: |
+          ./api-server &
+          echo $! > server.pid
+          sleep 3
+
+      - name: Install Vegeta
+        run: |
+          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          sudo mv vegeta /usr/local/bin/
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Run Smoke Test
+        run: |
+          cd tests/vegeta
+          bash run-smoke.sh
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true
+
+  load-test:
+    name: Vegeta Load Test
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'load' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-server
+
+      - name: Make server executable
+        run: chmod +x api-server
+
+      - name: Start server
+        run: |
+          ./api-server &
+          echo $! > server.pid
+          sleep 3
+
+      - name: Install Vegeta
+        run: |
+          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          sudo mv vegeta /usr/local/bin/
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Run Load Test
+        run: |
+          cd tests/vegeta
+          bash run-load.sh
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true
+
+  stress-test:
+    name: Vegeta Stress Test
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'stress' || github.event.inputs.test_type == 'all'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-server
+
+      - name: Make server executable
+        run: chmod +x api-server
+
+      - name: Start server
+        run: |
+          ./api-server &
+          echo $! > server.pid
+          sleep 3
+
+      - name: Install Vegeta
+        run: |
+          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          sudo mv vegeta /usr/local/bin/
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Run Stress Test
+        run: |
+          cd tests/vegeta
+          bash run-stress.sh
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true
+
+  performance-test:
+    name: Vegeta Performance Test
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'performance' || github.event.inputs.test_type == 'all'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-server
+
+      - name: Make server executable
+        run: chmod +x api-server
+
+      - name: Start server
+        run: |
+          ./api-server &
+          echo $! > server.pid
+          sleep 3
+
+      - name: Install Vegeta
+        run: |
+          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          sudo mv vegeta /usr/local/bin/
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Run Performance Test
+        run: |
+          cd tests/vegeta
+          bash run-performance.sh
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true
+
+  auth-flow-test:
+    name: Vegeta Auth Flow Test
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'auth-flow' || github.event.inputs.test_type == 'all'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-server
+
+      - name: Make server executable
+        run: chmod +x api-server
+
+      - name: Start server
+        run: |
+          ./api-server &
+          echo $! > server.pid
+          sleep 3
+
+      - name: Install Vegeta
+        run: |
+          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          sudo mv vegeta /usr/local/bin/
+
+      - name: Install jq and curl
+        run: sudo apt-get install -y jq curl
+
+      - name: Run Auth Flow Test
+        run: |
+          cd tests/vegeta
+          bash run-auth-flow.sh
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true
+
+  file-operations-test:
+    name: Vegeta File Operations Test
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'file-operations' || github.event.inputs.test_type == 'all'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-server
+
+      - name: Make server executable
+        run: chmod +x api-server
+
+      - name: Start server
+        run: |
+          ./api-server &
+          echo $! > server.pid
+          sleep 3
+
+      - name: Install Vegeta
+        run: |
+          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          sudo mv vegeta /usr/local/bin/
+
+      - name: Install jq and curl
+        run: sudo apt-get install -y jq curl
+
+      - name: Run File Operations Test
+        run: |
+          cd tests/vegeta
+          bash run-file-operations.sh
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true
