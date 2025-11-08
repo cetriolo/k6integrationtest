@@ -22,7 +22,7 @@ on:
           - all
 
 env:
-  GO_VERSION: '1.23'
+  GO_VERSION: '1.25.1'
   K6_VERSION: 'v0.48.0'
 
 jobs:
@@ -214,7 +214,7 @@ jobs:
     name: Auth Flow Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'auth-flow' || github.event.inputs.test_type == 'all'
+    if: github.event.inputs.test_type == 'auth-flow' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
@@ -249,7 +249,7 @@ jobs:
     name: File Operations Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'file-operations' || github.event.inputs.test_type == 'all'
+    if: github.event.inputs.test_type == 'file-operations' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4

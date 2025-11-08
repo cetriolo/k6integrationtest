@@ -88,8 +88,9 @@ jobs:
 
       - name: Install Vegeta
         run: |
-          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
-          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          VEGETA_FILENAME="vegeta-${VEGETA_VERSION#v}-linux-amd64.tar.gz"
+          wget "https://github.com/tsenart/vegeta/releases/download/${VEGETA_VERSION}/${VEGETA_FILENAME}"
+          tar xzf "${VEGETA_FILENAME}"
           sudo mv vegeta /usr/local/bin/
 
       - name: Install jq
@@ -129,8 +130,9 @@ jobs:
 
       - name: Install Vegeta
         run: |
-          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
-          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          VEGETA_FILENAME="vegeta-${VEGETA_VERSION#v}-linux-amd64.tar.gz"
+          wget "https://github.com/tsenart/vegeta/releases/download/${VEGETA_VERSION}/${VEGETA_FILENAME}"
+          tar xzf "${VEGETA_FILENAME}"
           sudo mv vegeta /usr/local/bin/
 
       - name: Install jq
@@ -170,8 +172,9 @@ jobs:
 
       - name: Install Vegeta
         run: |
-          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
-          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          VEGETA_FILENAME="vegeta-${VEGETA_VERSION#v}-linux-amd64.tar.gz"
+          wget "https://github.com/tsenart/vegeta/releases/download/${VEGETA_VERSION}/${VEGETA_FILENAME}"
+          tar xzf "${VEGETA_FILENAME}"
           sudo mv vegeta /usr/local/bin/
 
       - name: Install jq
@@ -211,8 +214,9 @@ jobs:
 
       - name: Install Vegeta
         run: |
-          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
-          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          VEGETA_FILENAME="vegeta-${VEGETA_VERSION#v}-linux-amd64.tar.gz"
+          wget "https://github.com/tsenart/vegeta/releases/download/${VEGETA_VERSION}/${VEGETA_FILENAME}"
+          tar xzf "${VEGETA_FILENAME}"
           sudo mv vegeta /usr/local/bin/
 
       - name: Install jq
@@ -252,8 +256,9 @@ jobs:
 
       - name: Install Vegeta
         run: |
-          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
-          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          VEGETA_FILENAME="vegeta-${VEGETA_VERSION#v}-linux-amd64.tar.gz"
+          wget "https://github.com/tsenart/vegeta/releases/download/${VEGETA_VERSION}/${VEGETA_FILENAME}"
+          tar xzf "${VEGETA_FILENAME}"
           sudo mv vegeta /usr/local/bin/
 
       - name: Install jq and curl
@@ -293,8 +298,9 @@ jobs:
 
       - name: Install Vegeta
         run: |
-          wget https://github.com/tsenart/vegeta/releases/download/${{ env.VEGETA_VERSION }}/vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
-          tar xzf vegeta_${{ env.VEGETA_VERSION }}_linux_amd64.tar.gz
+          VEGETA_FILENAME="vegeta-${VEGETA_VERSION#v}-linux-amd64.tar.gz"
+          wget "https://github.com/tsenart/vegeta/releases/download/${VEGETA_VERSION}/${VEGETA_FILENAME}"
+          tar xzf "${VEGETA_FILENAME}"
           sudo mv vegeta /usr/local/bin/
 
       - name: Install jq and curl
