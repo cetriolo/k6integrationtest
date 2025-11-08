@@ -100,7 +100,7 @@ jobs:
     name: Load Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'load' || github.event.inputs.test_type == 'all'
+    if: github.event.inputs.test_type == 'load' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
     name: Stress Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'stress' || github.event.inputs.test_type == 'all'
+    if: github.event.inputs.test_type == 'stress' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
@@ -170,7 +170,7 @@ jobs:
     name: Performance Test
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.test_type == 'performance' || github.event.inputs.test_type == 'all'
+    if: github.event.inputs.test_type == 'performance' || github.event.inputs.test_type == 'all' || github.event.inputs.test_type == ''
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
@@ -212,7 +212,8 @@ jobs:
   remote-test:
     name: Test su Ambiente Remoto
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    #if: github.ref == 'refs/heads/main' activate for main branch only
+    if: github.event.inputs.test_type == 'remote'
     steps:
       - name: Checkout codice
         uses: actions/checkout@v4
